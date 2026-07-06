@@ -287,9 +287,12 @@ void WebApp::setupStatic()
         req->redirect("/favicon.svg");
     });
 
+    // no-cache: the browser must revalidate each load, so assets updated via
+    // OTA (uploadfs) appear immediately instead of being served stale for
+    // minutes. Files are small + gzipped, so the re-fetch cost is negligible.
     _server.serveStatic("/", LittleFS, "/")
         .setDefaultFile("index.html")
-        .setCacheControl("max-age=600");
+        .setCacheControl("no-cache");
 
     _server.onNotFound([this](AsyncWebServerRequest* req) {
         if (_apMode) {
