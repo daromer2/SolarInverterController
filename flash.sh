@@ -9,12 +9,13 @@
 #   ./flash.sh erase               wipe ALL flash (config + fs), then reflash all
 #   ./flash.sh test                run the host-side protocol tests
 #
-#   ./flash.sh ota <host> [fw|fs|all]   flash over the network, e.g.:
-#       ./flash.sh ota ESP-solar.local
-#       ./flash.sh ota 192.168.1.42 all
+#   ./flash.sh --ip <host> [fw|fs|all]  flash over the network (OTA), e.g.:
+#   ./flash.sh ota <host> [fw|fs|all]       ./flash.sh --ip 192.168.1.42 all
+#       ./flash.sh --ip ESP-solar.local     ./flash.sh --ip solar.local fs
 #
 # Options via env:
 #   PORT=/dev/ttyUSB1 ./flash.sh   force a specific USB port
+#   OTA_PASS=secret ./flash.sh --ip <host>   OTA password (if one is set)
 
 set -euo pipefail
 SELF="$(readlink -f "$0")"
@@ -37,6 +38,27 @@ usb_hint() {
     fi
 }
 
+# Network (OTA) flash of one or more targets to a host/IP.
+ota_flash() {
+    local host="$1"; shift
+    local what="${1:-fw}"
+    local flags=(--upload-port "$host")
+    [ -n "${OTA_PASS:-}" ] && flags+=(--upload-flags "--auth=$OTA_PASS")
+    case "$what" in
+        fw)  "$PIO" run -e esp32 -t upload   "${flags[@]}" ;;
+        fs)  "$PIO" run -e esp32 -t uploadfs "${flags[@]}" ;;
+        all) "$PIO" run -e esp32 -t upload   "${flags[@]}"
+             "$PIO" run -e esp32 -t uploadfs "${flags[@]}" ;;
+        *)   echo "unknown target '$what' (fw|fs|all)"; exit 1 ;;
+    esac
+}
+
+# --ip <host> [fw|fs|all]  — network flash (alias for `ota`)
+if [ "${1:-}" = "--ip" ]; then
+    ota_flash "${2:?usage: ./flash.sh --ip <host|ip> [fw|fs|all]}" "${3:-fw}"
+    exit $?
+fi
+
 case "${1:-fw}" in
     fw)
         usb_hint
@@ -52,15 +74,7 @@ case "${1:-fw}" in
         "$PIO" run -e esp32 -t uploadfs "${PORT_ARG[@]}"
         ;;
     ota)
-        HOST="${2:?usage: ./flash.sh ota <host|ip> [fw|fs|all]}"
-        WHAT="${3:-fw}"
-        case "$WHAT" in
-            fw)  "$PIO" run -e esp32 -t upload   --upload-port "$HOST" ;;
-            fs)  "$PIO" run -e esp32 -t uploadfs --upload-port "$HOST" ;;
-            all) "$PIO" run -e esp32 -t upload   --upload-port "$HOST"
-                 "$PIO" run -e esp32 -t uploadfs --upload-port "$HOST" ;;
-            *)   echo "unknown target '$WHAT' (fw|fs|all)"; exit 1 ;;
-        esac
+        ota_flash "${2:?usage: ./flash.sh ota <host|ip> [fw|fs|all]}" "${3:-fw}"
         ;;
     erase)
         usb_hint
