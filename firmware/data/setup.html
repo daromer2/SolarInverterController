@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Solar Setup</title>
+<style>
+  body { background:#0f1419; color:#dce6f0; font:16px/1.5 system-ui,sans-serif;
+         max-width:480px; margin:0 auto; padding:20px; }
+  h1 { font-size:20px; margin-bottom:4px; }
+  p.sub { color:#8494a5; font-size:13px; margin-bottom:20px; }
+  .card { background:#1a2129; border:1px solid #2d3945; border-radius:10px;
+          padding:16px; margin-bottom:14px; }
+  h2 { font-size:14px; color:#8494a5; text-transform:uppercase; margin-bottom:10px; }
+  label { display:block; font-size:13px; color:#8494a5; margin:10px 0 3px; }
+  input, select { width:100%; background:#0f1419; border:1px solid #2d3945;
+          color:#dce6f0; border-radius:6px; padding:9px 10px; font-size:15px; }
+  button { width:100%; margin-top:16px; background:#38b6ff; border:none;
+          color:#04121d; font-weight:700; font-size:16px; border-radius:8px;
+          padding:12px; cursor:pointer; }
+  #msg { margin-top:12px; text-align:center; color:#3ddc84; }
+</style>
+</head>
+<body>
+<h1>Solar Inverter Controller</h1>
+<p class="sub">First-time setup — pick your WiFi, inverter type and MQTT server, then save &amp; reboot.</p>
+
+<div class="card">
+  <h2>WiFi</h2>
+  <label>Network</label>
+  <select id="scan"><option value="">scanning…</option></select>
+  <label>SSID</label>
+  <input id="ssid" placeholder="network name">
+  <label>Password</label>
+  <input id="pass" type="password">
+</div>
+
+<div class="card">
+  <h2>Device</h2>
+  <label>Device name (MQTT topic + hostname)</label>
+  <input id="name" value="solar">
+  <label>Inverter type</label>
+  <select id="type">
+    <option value="MPI">MPP Solar MPI Hybrid 10KW</option>
+    <option value="PIP">MPP Solar PIP / Axpert</option>
+    <option value="PCM">MPP Solar PCM60X charger</option>
+  </select>
+</div>
+
+<div class="card">
+  <h2>MQTT (optional, can be set later)</h2>
+  <label>Server</label>
+  <input id="msrv" placeholder="192.168.1.10">
+  <label>Port</label>
+  <input id="mprt" type="number" value="1883">
+  <label>User</label>
+  <input id="musr">
+  <label>Password</label>
+  <input id="mpwd" type="password">
+</div>
+
+<button id="save">Save &amp; Reboot</button>
+<div id="msg"></div>
+
+<script>
+"use strict";
+const $ = (s) => document.querySelector(s);
+
+async function scan() {
+  try {
+    const r = await (await fetch("/api/scan")).json();
+    if (r.scanning) return setTimeout(scan, 1500);
+    const sel = $("#scan");
+    sel.innerHTML = "<option value=''>— pick a network —</option>";
+    (r.networks || []).sort((a, b) => b.rssi - a.rssi)
+      .forEach((n) => sel.add(new Option(`${n.ssid} (${n.rssi} dBm)`, n.ssid)));
+  } catch (e) { setTimeout(scan, 2000); }
+}
+scan();
+$("#scan").addEventListener("change", (e) => { if (e.target.value) $("#ssid").value = e.target.value; });
+
+$("#save").addEventListener("click", async () => {
+  const body = {
+    wifiSsid: $("#ssid").value,
+    wifiPass: $("#pass").value,
+    deviceName: $("#name").value || "solar",
+    profileId: $("#type").value,
+    mqttServer: $("#msrv").value,
+    mqttPort: Number($("#mprt").value) || 1883,
+    mqttUser: $("#musr").value,
+    mqttPass: $("#mpwd").value,
+    mqttEnabled: $("#msrv").value.length > 0,
+  };
+  const r = await fetch("/api/settings", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!r.ok) { $("#msg").textContent = "Save failed"; return; }
+  $("#msg").textContent = "Saved! Rebooting — reconnect to your normal WiFi and find the device as http://ESP-" + body.deviceName + ".local";
+  fetch("/api/reboot", { method: "POST" });
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,69 @@
+<svg viewBox="0 0 900 500" xmlns="http://www.w3.org/2000/svg">
+  <!-- flows -->
+  <path id="flow-pv1"  class="flow c-pv"   d="M230,105 C300,105 300,175 355,185"/>
+  <path id="flow-pv2"  class="flow c-pv"   d="M230,225 C290,225 300,225 355,220"/>
+  <path id="flow-grid" class="flow c-grid" d="M655,115 C580,115 590,180 540,190"/>
+  <path id="flow-load" class="flow c-load" d="M540,250 C600,260 590,345 655,350"/>
+  <path id="flow-batt" class="flow c-batt" d="M445,390 L445,300"/>
+
+  <!-- pv1 / pv2 -->
+  <g>
+    <rect class="node" x="40" y="60" width="190" height="90" rx="10"/>
+    <text class="node-label" x="135" y="84" text-anchor="middle">☀ SOLAR 1</text>
+    <text class="node-value" x="135" y="112" text-anchor="middle" id="v-pv1w">—</text>
+    <text class="node-sub"   x="135" y="134" text-anchor="middle" id="v-pv1v">—</text>
+  </g>
+  <g>
+    <rect class="node" x="40" y="180" width="190" height="90" rx="10"/>
+    <text class="node-label" x="135" y="204" text-anchor="middle">☀ SOLAR 2</text>
+    <text class="node-value" x="135" y="232" text-anchor="middle" id="v-pv2w">—</text>
+    <text class="node-sub"   x="135" y="254" text-anchor="middle" id="v-pv2v">—</text>
+  </g>
+
+  <!-- inverter -->
+  <g>
+    <rect class="node" x="355" y="160" width="185" height="140" rx="10"/>
+    <text class="node-label" x="447" y="186" text-anchor="middle">MPI 10KW</text>
+    <text class="node-value" x="447" y="216" text-anchor="middle" id="v-mode">—</text>
+    <text class="node-sub"   x="447" y="242" text-anchor="middle" id="v-temp">—</text>
+    <text class="node-sub"   x="447" y="262" text-anchor="middle" id="v-feedmax">—</text>
+    <text class="node-sub"   x="447" y="282" text-anchor="middle" id="v-outfreq">—</text>
+  </g>
+
+  <!-- grid, 3-phase -->
+  <g>
+    <rect class="node" x="655" y="30" width="215" height="170" rx="10"/>
+    <text class="node-label" x="762" y="54" text-anchor="middle">⚡ GRID (3~)</text>
+    <text class="node-sub" x="675" y="82">R</text>
+    <text class="node-value" x="700" y="82" id="v-gridr" font-size="13">—</text>
+    <text class="node-sub" x="675" y="106">S</text>
+    <text class="node-value" x="700" y="106" id="v-grids" font-size="13">—</text>
+    <text class="node-sub" x="675" y="130">T</text>
+    <text class="node-value" x="700" y="130" id="v-gridt" font-size="13">—</text>
+    <text class="node-value" x="762" y="162" text-anchor="middle" id="v-gridw">—</text>
+    <text class="node-sub"   x="762" y="184" text-anchor="middle" id="v-gridf">—</text>
+  </g>
+
+  <!-- load, 3-phase -->
+  <g>
+    <rect class="node" x="655" y="280" width="215" height="170" rx="10"/>
+    <text class="node-label" x="762" y="304" text-anchor="middle">🏠 LOAD (3~)</text>
+    <text class="node-sub" x="675" y="332">R</text>
+    <text class="node-value" x="700" y="332" id="v-loadr" font-size="13">—</text>
+    <text class="node-sub" x="675" y="356">S</text>
+    <text class="node-value" x="700" y="356" id="v-loads" font-size="13">—</text>
+    <text class="node-sub" x="675" y="380">T</text>
+    <text class="node-value" x="700" y="380" id="v-loadt" font-size="13">—</text>
+    <text class="node-value" x="762" y="412" text-anchor="middle" id="v-loadw">—</text>
+    <text class="node-sub"   x="762" y="434" text-anchor="middle" id="v-loadpct">—</text>
+  </g>
+
+  <!-- battery -->
+  <g>
+    <rect class="node" x="355" y="390" width="185" height="100" rx="10"/>
+    <text class="node-label" x="447" y="414" text-anchor="middle">🔋 BATTERY</text>
+    <text class="node-value" x="447" y="442" text-anchor="middle" id="v-battv">—</text>
+    <text class="node-sub"   x="447" y="464" text-anchor="middle" id="v-battw">—</text>
+    <text class="node-sub"   x="447" y="482" text-anchor="middle" id="v-battc">—</text>
+  </g>
+</svg>

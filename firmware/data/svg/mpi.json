@@ -1,0 +1,32 @@
+{
+  "binds": [
+    {"el": "v-pv1w", "key": "pv1_power", "dec": 0, "unit": "W"},
+    {"el": "v-pv1v", "key": "pv1_voltage", "dec": 0, "unit": "V"},
+    {"el": "v-pv2w", "key": "pv2_power", "dec": 0, "unit": "W"},
+    {"el": "v-pv2v", "key": "pv2_voltage", "dec": 0, "unit": "V"},
+    {"el": "v-mode", "key": "mode"},
+    {"el": "v-temp", "key": "inner_temp", "dec": 0, "unit": "°C"},
+    {"el": "v-feedmax", "key": "feed_grid_max_power", "dec": 0, "unit": "W max feed"},
+    {"el": "v-outfreq", "key": "ac_output_frequency", "dec": 2, "unit": "Hz"},
+    {"el": "v-gridr", "key": "grid_voltage_r", "dec": 0, "unit": "V"},
+    {"el": "v-grids", "key": "grid_voltage_s", "dec": 0, "unit": "V"},
+    {"el": "v-gridt", "key": "grid_voltage_t", "dec": 0, "unit": "V"},
+    {"el": "v-gridw", "key": "grid_in_power_total", "dec": 0, "unit": "W"},
+    {"el": "v-gridf", "key": "grid_frequency", "dec": 2, "unit": "Hz"},
+    {"el": "v-loadr", "key": "ac_output_power_r", "dec": 0, "unit": "W"},
+    {"el": "v-loads", "key": "ac_output_power_s", "dec": 0, "unit": "W"},
+    {"el": "v-loadt", "key": "ac_output_power_t", "dec": 0, "unit": "W"},
+    {"el": "v-loadw", "key": "ac_output_power_total", "dec": 0, "unit": "W"},
+    {"el": "v-loadpct", "key": "ac_output_percent", "dec": 0, "unit": "%"},
+    {"el": "v-battv", "key": "battery_voltage", "dec": 1, "unit": "V"},
+    {"el": "v-battw", "key": "battery_power", "dec": 0, "unit": "W"},
+    {"el": "v-battc", "key": "battery_capacity", "dec": 0, "unit": "%"}
+  ],
+  "flows": [
+    {"el": "flow-pv1",  "key": "pv1_power", "min": 10},
+    {"el": "flow-pv2",  "key": "pv2_power", "min": 10},
+    {"el": "flow-grid", "key": "grid_in_power_total", "min": 20},
+    {"el": "flow-load", "key": "ac_output_power_total", "min": 15},
+    {"el": "flow-batt", "key": "battery_power", "min": 15}
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "binds": [
+    {"el": "v-gridv",  "key": "grid_voltage", "dec": 1, "unit": "V"},
+    {"el": "v-gridf",  "key": "grid_frequency", "dec": 1, "unit": "Hz"},
+    {"el": "v-pvw",    "key": "pv_charging_power", "dec": 0, "unit": "W"},
+    {"el": "v-pvv",    "key": "pv_input_voltage", "dec": 1, "unit": "V"},
+    {"el": "v-pva",    "key": "pv_input_current", "dec": 1, "unit": "A"},
+    {"el": "v-mode",   "key": "mode"},
+    {"el": "v-temp",   "key": "heatsink_temp", "dec": 0, "unit": "°C"},
+    {"el": "v-busv",   "key": "bus_voltage", "dec": 0, "unit": "V bus"},
+    {"el": "v-loadw",  "key": "ac_output_power", "dec": 0, "unit": "W"},
+    {"el": "v-loadva", "key": "ac_output_va", "dec": 0, "unit": "VA"},
+    {"el": "v-loadpct","key": "load_percent", "dec": 0, "unit": "%"},
+    {"el": "v-battv",  "key": "battery_voltage", "dec": 2, "unit": "V"},
+    {"el": "v-batta",  "expr": "battery_charge_current-battery_discharge_current", "dec": 1, "unit": "A"},
+    {"el": "v-battc",  "key": "battery_capacity", "dec": 0, "unit": "%"}
+  ],
+  "flows": [
+    {"el": "flow-pv",   "key": "pv_charging_power", "min": 10},
+    {"el": "flow-load", "key": "ac_output_power", "min": 10},
+    {"el": "flow-batt", "expr": "battery_charge_current*battery_voltage-battery_discharge_current*battery_voltage", "min": 15},
+    {"el": "flow-grid", "mode": ["L"]}
+  ]
+}

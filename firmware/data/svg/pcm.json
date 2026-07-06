@@ -1,0 +1,14 @@
+{
+  "binds": [
+    {"el": "v-pvv",   "key": "pv_input_voltage", "dec": 1, "unit": "V"},
+    {"el": "v-pva",   "key": "pv_input_current", "dec": 2, "unit": "A"},
+    {"el": "v-pva2",  "key": "pv2_input_current", "dec": 2, "unit": "A (2)"},
+    {"el": "v-chgw",  "key": "charging_power", "dec": 0, "unit": "W"},
+    {"el": "v-battv", "key": "battery_voltage", "dec": 2, "unit": "V"},
+    {"el": "v-batta", "key": "battery_charge_current", "dec": 2, "unit": "A"}
+  ],
+  "flows": [
+    {"el": "flow-pv",   "key": "charging_power", "min": 5},
+    {"el": "flow-batt", "key": "charging_power", "min": 5}
+  ]
+}

@@ -1,0 +1,30 @@
+<svg viewBox="0 0 900 320" xmlns="http://www.w3.org/2000/svg">
+  <!-- flows -->
+  <path id="flow-pv"   class="flow c-pv"   d="M320,160 L390,160"/>
+  <path id="flow-batt" class="flow c-batt" d="M590,160 L660,160"/>
+
+  <!-- pv -->
+  <g>
+    <rect class="node" x="90" y="95" width="230" height="130" rx="10"/>
+    <text class="node-label" x="205" y="124" text-anchor="middle">☀ SOLAR</text>
+    <text class="node-value" x="205" y="156" text-anchor="middle" id="v-pvv">—</text>
+    <text class="node-sub"   x="205" y="182" text-anchor="middle" id="v-pva">—</text>
+    <text class="node-sub"   x="205" y="202" text-anchor="middle" id="v-pva2">—</text>
+  </g>
+
+  <!-- charger -->
+  <g>
+    <rect class="node" x="390" y="95" width="200" height="130" rx="10"/>
+    <text class="node-label" x="490" y="124" text-anchor="middle">PCM60X MPPT</text>
+    <text class="node-value" x="490" y="160" text-anchor="middle" id="v-chgw">—</text>
+    <text class="node-sub"   x="490" y="188" text-anchor="middle">charging power</text>
+  </g>
+
+  <!-- battery -->
+  <g>
+    <rect class="node" x="660" y="95" width="200" height="130" rx="10"/>
+    <text class="node-label" x="760" y="124" text-anchor="middle">🔋 BATTERY</text>
+    <text class="node-value" x="760" y="156" text-anchor="middle" id="v-battv">—</text>
+    <text class="node-sub"   x="760" y="182" text-anchor="middle" id="v-batta">—</text>
+  </g>
+</svg>

@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Solar Inverter Controller</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<header>
+  <h1>Solar Inverter Controller</h1>
+  <span class="dev" id="devlabel">…</span>
+  <nav>
+    <button data-page="dash" class="active">Dashboard</button>
+    <button data-page="ctl">Controls</button>
+    <button data-page="con">Console</button>
+    <button data-page="set">Settings</button>
+  </nav>
+</header>
+
+<div id="statusbar">
+  <span><span class="dot" id="dot-inv"></span>Inverter <span id="inv-age"></span></span>
+  <span><span class="dot" id="dot-wifi"></span>WiFi <span id="wifi-rssi"></span></span>
+  <span><span class="dot" id="dot-mqtt"></span>MQTT</span>
+  <span id="sb-mode" class="badge" hidden></span>
+  <span style="margin-left:auto" id="sb-sys"></span>
+</div>
+
+<main>
+  <!-- ================= dashboard ================= -->
+  <section class="page visible" id="page-dash">
+    <div class="card" id="warncard" hidden>
+      <h2>Active warnings</h2>
+      <div id="warnings"></div>
+    </div>
+    <div class="card">
+      <div id="svgwrap">loading…</div>
+    </div>
+    <div class="card">
+      <h2>All values</h2>
+      <div class="dpgrid" id="dpgrid"></div>
+    </div>
+  </section>
+
+  <!-- ================= controls ================= -->
+  <section class="page" id="page-ctl">
+    <div class="card">
+      <h2>Inverter controls</h2>
+      <p style="color:var(--muted);font-size:13px;margin-bottom:10px">
+        Commands are validated, sent to the inverter, and confirmed (ACK/NAK).
+        Current values come from the device itself.
+      </p>
+      <div id="controls"></div>
+    </div>
+  </section>
+
+  <!-- ================= console ================= -->
+  <section class="page" id="page-con">
+    <div class="card">
+      <h2>Raw command console</h2>
+      <div id="conlog"></div>
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <input id="coninput" style="flex:1" placeholder="e.g. QPIRI or GS (framing + CRC added automatically)">
+        <button class="act" id="consend">Send</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Device log</h2>
+      <div id="devlog" style="max-height:260px;overflow-y:auto;font:12px/1.5 ui-monospace,monospace;white-space:pre-wrap"></div>
+      <button class="act" id="logrefresh" style="margin-top:8px">Refresh</button>
+    </div>
+  </section>
+
+  <!-- ================= settings ================= -->
+  <section class="page" id="page-set">
+    <div class="card">
+      <h2>Device</h2>
+      <div class="formgrid">
+        <label>Device name</label><input id="s-deviceName">
+        <label>Inverter type</label><select id="s-profileId"></select>
+        <span class="formrow-note">Changing type requires a reboot</span>
+        <label>UART RX pin</label><input id="s-uartRx" type="number" min="0" max="39">
+        <label>UART TX pin</label><input id="s-uartTx" type="number" min="0" max="33">
+        <label>Baud override (0 = default)</label><input id="s-baudOverride" type="number" min="0">
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>WiFi</h2>
+      <div class="formgrid">
+        <label>Network</label>
+        <div style="display:flex;gap:8px">
+          <select id="s-wifiScan" style="max-width:200px"><option value="">— scan —</option></select>
+          <input id="s-wifiSsid" placeholder="SSID">
+        </div>
+        <label>Password</label><input id="s-wifiPass" type="password" placeholder="(unchanged)">
+      </div>
+      <button class="act" id="btn-scan" style="margin-top:10px">Scan networks</button>
+    </div>
+
+    <div class="card">
+      <h2>MQTT</h2>
+      <div class="formgrid">
+        <label>Enabled</label><label class="switch"><input type="checkbox" id="s-mqttEnabled"><span class="slider"></span></label>
+        <label>Server</label><input id="s-mqttServer">
+        <label>Port</label><input id="s-mqttPort" type="number" min="1" max="65535">
+        <label>User</label><input id="s-mqttUser">
+        <label>Password</label><input id="s-mqttPass" type="password" placeholder="(unchanged)">
+        <label>Base topic</label><input id="s-baseTopic">
+        <label>Publish interval (s)</label><input id="s-publishIntervalS" type="number" min="1" max="600">
+        <label>Per-field topics</label><label class="switch"><input type="checkbox" id="s-perFieldTopics"><span class="slider"></span></label>
+        <label>Legacy topic compatibility</label><label class="switch"><input type="checkbox" id="s-legacyCompat"><span class="slider"></span></label>
+        <span class="formrow-note">Publishes the exact old InverterOfThings topics alongside the new schema</span>
+        <label>Home Assistant discovery</label><label class="switch"><input type="checkbox" id="s-haDiscovery"><span class="slider"></span></label>
+        <label>HA prefix</label><input id="s-haPrefix">
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Feed-in failsafe (MPI + SDM630 controller)</h2>
+      <div class="formgrid">
+        <label>Enabled</label><label class="switch"><input type="checkbox" id="s-feedGuardEnabled"><span class="slider"></span></label>
+        <label>Controller timeout (s)</label><input id="s-feedGuardTimeoutS" type="number" min="5" max="3600">
+        <label>Failsafe feed power (W)</label><input id="s-feedGuardFailsafeW" type="number" min="0" max="15000">
+        <span class="formrow-note">If cmd/feed_power messages stop, feed-in is set once to this value until the controller returns</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>LEDs</h2>
+      <div class="formgrid">
+        <label>Enabled</label><label class="switch"><input type="checkbox" id="s-ledEnabled"><span class="slider"></span></label>
+        <label>Red pin (inverter fault)</label><input id="s-ledRedPin" type="number" min="0" max="33">
+        <label>Green pin (MQTT)</label><input id="s-ledGreenPin" type="number" min="0" max="33">
+        <label>Active low</label><label class="switch"><input type="checkbox" id="s-ledActiveLow"><span class="slider"></span></label>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Web access</h2>
+      <div class="formgrid">
+        <label>Require login</label><label class="switch"><input type="checkbox" id="s-authEnabled"><span class="slider"></span></label>
+        <label>User</label><input id="s-webUser">
+        <label>Password</label><input id="s-webPass" type="password" placeholder="(unchanged)">
+        <label>OTA password</label><input id="s-otaPassword" type="password" placeholder="(unchanged)">
+      </div>
+    </div>
+
+    <div class="card">
+      <button class="act" id="btn-save">Save settings</button>
+      <button class="act" id="btn-reboot" style="margin-left:8px">Reboot</button>
+      <span class="formrow-note" style="display:block;margin-top:6px">Most changes apply after reboot</span>
+    </div>
+
+    <div class="card">
+      <h2>Firmware update (OTA)</h2>
+      <div class="formgrid">
+        <label>Firmware (.bin)</label><input type="file" id="ota-fw" accept=".bin">
+        <label>Web assets (littlefs.bin)</label><input type="file" id="ota-fs" accept=".bin">
+      </div>
+      <progress id="ota-prog" value="0" max="100" style="margin-top:10px" hidden></progress>
+      <div style="margin-top:10px">
+        <button class="act" id="btn-ota-fw">Upload firmware</button>
+        <button class="act" id="btn-ota-fs" style="margin-left:8px">Upload web assets</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Backup</h2>
+      <a href="/api/settings/export" class="badge">Download settings JSON</a>
+      <input type="file" id="imp-file" accept=".json" style="margin-left:10px">
+      <button class="act" id="btn-import">Import</button>
+      <button class="act danger" id="btn-factory" style="float:right">Factory reset</button>
+    </div>
+  </section>
+</main>
+
+<div id="toast"></div>
+<script src="/app.js"></script>
+</body>
+</html>
