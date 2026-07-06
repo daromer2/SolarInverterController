@@ -29,3 +29,9 @@
 
 #define WIFI_STA_ATTEMPT_MS  45000  // STA connect budget before AP fallback
 #define WIFI_RETRY_WHILE_AP_MS 300000 // retry STA every 5 min while in AP mode
+
+// Cap WiFi TX power to shrink the radio's current spike. Many cheap boards
+// (D1 mini style, weak AMS1117 regulators) brown out at full 19.5dBm the
+// moment the radio powers on. 13dBm is a good balance of range vs. inrush;
+// lower to WIFI_POWER_11dBm / _8_5dBm if brownouts persist on poor supplies.
+#define WIFI_TX_POWER WIFI_POWER_13dBm

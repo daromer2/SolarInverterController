@@ -27,6 +27,7 @@ void WifiManager::startSta(uint32_t nowMs)
     _staStartedAt = nowMs;
     _lastStaRetry = nowMs;
     WiFi.mode(_apActive ? WIFI_AP_STA : WIFI_STA);
+    WiFi.setTxPower(WIFI_TX_POWER);   // limit radio inrush (brownout guard)
     WiFi.begin(_ssid.c_str(), _pass.c_str());
     LOGI("wifi", "connecting to %s", _ssid.c_str());
 }
@@ -34,6 +35,7 @@ void WifiManager::startSta(uint32_t nowMs)
 void WifiManager::startAp()
 {
     WiFi.mode(_staConfigured ? WIFI_AP_STA : WIFI_AP);
+    WiFi.setTxPower(WIFI_TX_POWER);   // limit radio inrush (brownout guard)
     WiFi.softAP(_apSsid.c_str());
     _dns.start(53, "*", WiFi.softAPIP());   // captive portal: answer everything
     _apActive = true;
