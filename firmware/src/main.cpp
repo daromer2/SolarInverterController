@@ -20,6 +20,11 @@
 #include "net/WsHub.h"
 #include "net/OtaManager.h"
 
+#ifdef DISABLE_BROWNOUT
+#include "soc/soc.h"
+#include "soc/rtc_cntl_reg.h"
+#endif
+
 static SettingsStore settings;
 static InverterEngine engine;
 static LedManager leds;
@@ -38,6 +43,13 @@ static void onGuardEvent(const char* message)
 
 void setup()
 {
+#ifdef DISABLE_BROWNOUT
+    // Escape hatch for boards whose regulator dips at WiFi radio power-on.
+    // Trades brownout protection for the ability to run — only enable after
+    // ruling out cable/supply/board, and prefer a 470uF cap on 3V3 instead.
+    WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0);
+#endif
+
     logx::begin();
     LOGI("main", "SolarInverterController v%s booting", FW_VERSION);
 

@@ -91,6 +91,26 @@ with a USB-serial adapter crossed into GPIO16/17.
 - **PCM60X QPIRI/QPIWS field layouts** are best-effort from the manual; the
   QPIGS layout is the legacy-proven one.
 
+## Troubleshooting
+
+**`Brownout detector was triggered` at WiFi start / board keeps resetting.**
+The 3.3 V rail dips when the radio powers on. In order of preference:
+1. Use a short, good-quality data cable on a rear USB-2 port, or power from a
+   5 V/2 A wall charger (not a PC port).
+2. Add a 470 µF electrolytic capacitor across 3V3–GND to absorb the inrush.
+3. Suspect the board: cheap D1-mini ESP32 clones often ship weak/counterfeit
+   AMS1117 regulators — try another board to confirm.
+4. Last resort: uncomment `-DDISABLE_BROWNOUT` in `platformio.ini` and reflash.
+   This lets the device run but removes brownout protection (small risk of
+   flash corruption if the rail collapses during a write); only use it on a
+   known-good supply after the above.
+
+**USB `error -71` / no `/dev/ttyUSB*`** — cable or port; same root cause as
+brownout. Rear USB-2 port + a real data cable.
+
+**Serial port permission denied (Arch)** — `sudo usermod -aG uucp $USER`,
+then log out/in.
+
 ## Repository layout
 
 ```
