@@ -19,7 +19,9 @@
     {"el": "v-grids-a", "key": "grid_current_s", "dec": 1, "unit": "A"},
     {"el": "v-gridt-v", "key": "grid_voltage_t", "dec": 0, "unit": "V"},
     {"el": "v-gridt-a", "key": "grid_current_t", "dec": 1, "unit": "A"},
-    {"el": "v-gridw", "key": "grid_in_power_total", "dec": 0, "unit": "W"},
+    {"el": "v-gridw", "key": "grid_in_power_total", "dec": 0, "unit": "W",
+     "title": "Grid power — AC-input power if reported, else computed from grid V×I",
+     "fallback": {"expr": "grid_voltage_r*grid_current_r+grid_voltage_s*grid_current_s+grid_voltage_t*grid_current_t", "unit": "W"}},
     {"el": "v-gridf", "key": "grid_frequency", "dec": 2, "unit": "Hz"},
 
     {"el": "v-loadr-w", "key": "ac_output_power_r", "dec": 0, "unit": "W", "title": "AC output power R"},
@@ -52,6 +54,16 @@
       "pos": {"text": "▲ Charging", "color": "#3ddc84"},
       "neg": {"text": "▼ Discharging", "color": "#ff5c5c"},
       "zero": {"text": "Idle", "color": "#8494a5"}
+    },
+    {
+      "el": "v-gridstate",
+      "key": "line_direction",
+      "map": {
+        "0": {"text": "Idle", "color": "#8494a5"},
+        "1": {"text": "◀ Importing", "color": "#ffb454"},
+        "2": {"text": "▶ Exporting", "color": "#3ddc84"}
+      },
+      "zero": {"text": "—", "color": "#8494a5"}
     }
   ]
 }

@@ -238,8 +238,12 @@ function renderLive() {
       const v = resolveBind(s).v;
       const db = s.deadband || 0;
       let st;
-      if (v === undefined) st = s.zero || { text: "—", color: "#8494a5" };
-      else if (v > db) st = s.pos;
+      if (v === undefined) {
+        st = s.zero || { text: "—", color: "#8494a5" };
+      } else if (s.map) {
+        // discrete value -> label (e.g. line_direction 0/1/2)
+        st = s.map[String(Math.round(v))] || s.zero || { text: "—", color: "#8494a5" };
+      } else if (v > db) st = s.pos;
       else if (v < -db) st = s.neg;
       else st = s.zero || { text: "Idle", color: "#8494a5" };
       if (st) { el.textContent = st.text; el.style.fill = st.color; }

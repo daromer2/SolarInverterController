@@ -64,8 +64,9 @@
     <text class="node-value" x="712" y="126" font-size="13" id="v-gridt-v">—</text>
     <text class="node-sub"   x="800" y="126" font-size="13" id="v-gridt-a">—</text>
     <line x1="692" y1="142" x2="872" y2="142" stroke="#2d3945" stroke-width="1"/>
-    <text class="node-value" x="782" y="172" text-anchor="middle" id="v-gridw">—</text>
-    <text class="node-sub"   x="782" y="196" text-anchor="middle" id="v-gridf">—</text>
+    <text class="node-value" x="782" y="170" text-anchor="middle" id="v-gridw">—</text>
+    <text x="782" y="188" text-anchor="middle" id="v-gridstate" font-size="12" font-weight="700" fill="#8494a5">—</text>
+    <text class="node-sub"   x="782" y="206" text-anchor="middle" id="v-gridf">—</text>
   </g>
 
   <!-- load (3-phase) -->
