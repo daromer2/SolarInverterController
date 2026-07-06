@@ -9,6 +9,18 @@ let device = null;         // /api/device model
 let manifest = null;       // svg binding manifest
 let ws = null;
 const pendingCmds = {};    // key -> row state element
+const FIELDS = {};         // key -> {label, unit} from /api/device
+
+/* Attach/refresh a native SVG tooltip (<title>) on an element. */
+function setTip(el, text) {
+  if (!text) return;
+  let t = el.querySelector("title");
+  if (!t) {
+    t = document.createElementNS("http://www.w3.org/2000/svg", "title");
+    el.insertBefore(t, el.firstChild);
+  }
+  t.textContent = text;
+}
 
 /* ---------------- helpers ---------------- */
 
@@ -146,6 +158,8 @@ async function loadDevice() {
     $("#svgwrap").textContent = "dashboard graphics missing (upload web assets)";
   }
 
+  for (const f of device.fields) FIELDS[f.key] = { label: f.label, unit: f.unit || "" };
+
   renderDpGrid();
   renderControls();
 }
@@ -157,6 +171,7 @@ function renderDpGrid() {
     if (f.key.includes("reserved")) continue;
     const div = document.createElement("div");
     div.className = "dp";
+    div.title = `${f.label}${f.unit ? " (" + f.unit + ")" : ""} · MQTT: sensor/${f.key}`;
     div.innerHTML = `<div class="k">${f.label}</div><div class="v" id="dp-${f.key}">—</div>`;
     grid.appendChild(div);
   }
@@ -194,6 +209,9 @@ function renderLive() {
       if (!el) continue;
       const r = resolveBind(b);
       el.textContent = (r.v === undefined ? "—" : fmtVal(r.v, b.dec)) + (r.unit ? " " + r.unit : "");
+      // hover tooltip: explicit bind title, else the field's label
+      const tip = b.title || (b.key && FIELDS[b.key] ? FIELDS[b.key].label : null);
+      if (tip) setTip(el, tip);
     }
     for (const f of manifest.flows || []) {
       const el = document.getElementById(f.el);

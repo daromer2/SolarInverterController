@@ -175,15 +175,18 @@ const int16_t     LST_VALS[]  = {0, 1, 2, 10, 20};
 
 const SetCommandDef MPI_SETS[] = {
     // Grid / energy routing — the SDM630 controller drives feed_grid_max_power
-    {"feed_grid_max_power", "Max feed-to-grid power", "Grid", "W", "GPMP0%05d", ArgKind::Int,
+    {"feed_grid_max_power", "Max feed-to-grid power", "Grid feed-in", "W", "GPMP0%05d", ArgKind::Int,
      0, 15000, 1, nullptr, nullptr, 0, "GPMP"},
-    {"feed_to_grid", "Feed power to grid", "Grid", "", "EDC1|EDC0", ArgKind::Bool,
+    {"feed_to_grid", "Feed power to grid", "Grid feed-in", "", "EDC1|EDC0", ArgKind::Bool,
      0, 0, 0, nullptr, nullptr, 0, "HECS"},
-    {"batt_to_grid_solar_normal", "Battery feeds grid (solar normal)", "Grid", "", "EDF1|EDF0", ArgKind::Bool,
+    {"batt_to_grid_solar_normal", "Battery feeds grid (solar normal)", "Grid feed-in", "", "EDF1|EDF0", ArgKind::Bool,
      0, 0, 0, nullptr, nullptr, 0, "HECS"},
-    {"batt_to_grid_solar_loss", "Battery feeds grid (solar loss)", "Grid", "", "EDG1|EDG0", ArgKind::Bool,
+    {"batt_to_grid_solar_loss", "Battery feeds grid (solar loss)", "Grid feed-in", "", "EDG1|EDG0", ArgKind::Bool,
      0, 0, 0, nullptr, nullptr, 0, "HECS"},
-    {"feed_power_adjust", "Feed power adjust (advanced, raw args)", "Grid", "", "FPADJ%s", ArgKind::String,
+    // Sends ^S..FPADJ<args>. Args mirror the FPADJ query layout:
+    // dir,watt,dirR,calibR,dirS,calibS,dirT,calibT  (e.g. 1,0000,1,0099,1,0109,1,0112)
+    {"feed_power_adjust", "Feed calibration — raw args (dir,watt,dirR,calibR,dirS,calibS,dirT,calibT)",
+     "Grid feed-in", "", "FPADJ%s", ArgKind::String,
      0, 0, 0, nullptr, nullptr, 0, "FPADJ"},
 
     // Mode / energy distribution
