@@ -26,7 +26,9 @@ function fmtVal(v, dec) {
   return Number(v).toFixed(dec !== undefined ? dec : (Math.abs(v) < 10 ? 2 : Math.abs(v) < 100 ? 1 : 0));
 }
 
-/* tiny expression evaluator: keys/numbers with + - * (standard precedence) */
+/* tiny expression evaluator: keys/numbers with + - * / (left-to-right factors,
+ * standard +/- term splitting). Returns undefined if any key is missing or the
+ * result isn't finite (e.g. divide by zero). */
 function evalExpr(expr) {
   if (!expr) return undefined;
   let ok = true;
@@ -38,24 +40,44 @@ function evalExpr(expr) {
     if (v === undefined || typeof v === "string") { ok = false; return 0; }
     return v;
   };
-  // split into +/- terms keeping signs
-  let total = 0, sign = 1, term = null, buf = "";
-  const flushFactor = () => {
+  let total = 0, sign = 1, term = null, op = "*", buf = "";
+  const applyFactor = () => {
     const f = val(buf); buf = "";
-    term = term === null ? f : term * f;
+    if (term === null) term = f;
+    else term = op === "/" ? term / f : term * f;
   };
   const flushTerm = () => {
-    if (buf !== "" || term !== null) { flushFactor(); total += sign * term; term = null; }
+    if (buf !== "" || term !== null) { applyFactor(); total += sign * term; term = null; op = "*"; }
   };
   for (const c of expr) {
     if (c === "+" || c === "-") {
-      if (c === "-" && buf === "" && term === null) { sign = -sign; continue; }
+      if (buf === "" && term === null) { if (c === "-") sign = -sign; continue; }
       flushTerm(); sign = c === "-" ? -1 : 1;
-    } else if (c === "*") flushFactor();
+    } else if (c === "*") { applyFactor(); op = "*"; }
+    else if (c === "/") { applyFactor(); op = "/"; }
     else buf += c;
   }
   flushTerm();
-  return ok ? total : undefined;
+  return ok && isFinite(total) ? total : undefined;
+}
+
+/* Resolve a bind value with an optional fallback source. Each source may be a
+ * key or an expr and carry its own unit (so a current field can fall back to a
+ * voltage field, switching "A" -> "V"). */
+function resolveBind(b) {
+  const trySrc = (key, expr, unit) => {
+    if (key !== undefined && state[key] !== undefined) return { v: state[key], unit };
+    if (expr) { const v = evalExpr(expr); if (v !== undefined) return { v, unit }; }
+    return null;
+  };
+  const primary = trySrc(b.key, b.expr, b.unit);
+  if (primary) return primary;
+  if (b.fallback) {
+    const f = b.fallback;
+    const fb = trySrc(f.key, f.expr, f.unit !== undefined ? f.unit : b.unit);
+    if (fb) return fb;
+  }
+  return { v: undefined, unit: b.unit };
 }
 
 async function api(path, opts) {
@@ -170,8 +192,8 @@ function renderLive() {
     for (const b of manifest.binds || []) {
       const el = document.getElementById(b.el);
       if (!el) continue;
-      const v = b.key !== undefined ? state[b.key] : evalExpr(b.expr);
-      el.textContent = (v === undefined ? "—" : fmtVal(v, b.dec)) + (b.unit ? " " + b.unit : "");
+      const r = resolveBind(b);
+      el.textContent = (r.v === undefined ? "—" : fmtVal(r.v, b.dec)) + (r.unit ? " " + r.unit : "");
     }
     for (const f of manifest.flows || []) {
       const el = document.getElementById(f.el);
@@ -182,7 +204,7 @@ function renderLive() {
         el.classList.remove("rev");
         continue;
       }
-      const v = f.key !== undefined ? state[f.key] : evalExpr(f.expr);
+      const v = resolveBind(f).v;
       const min = f.min !== undefined ? f.min : 10;
       el.classList.toggle("active", v !== undefined && Math.abs(v) > min);
       el.classList.toggle("rev", v !== undefined && v < -min);

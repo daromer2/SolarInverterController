@@ -23,17 +23,17 @@
     {"el": "v-gridf", "key": "grid_frequency", "dec": 2, "unit": "Hz"},
 
     {"el": "v-loadr-w", "key": "ac_output_power_r", "dec": 0, "unit": "W"},
-    {"el": "v-loadr-a", "key": "ac_output_current_r", "dec": 1, "unit": "A"},
+    {"el": "v-loadr-a", "key": "ac_output_current_r", "dec": 1, "unit": "A", "fallback": {"key": "ac_output_voltage_r", "unit": "V"}},
     {"el": "v-loads-w", "key": "ac_output_power_s", "dec": 0, "unit": "W"},
-    {"el": "v-loads-a", "key": "ac_output_current_s", "dec": 1, "unit": "A"},
+    {"el": "v-loads-a", "key": "ac_output_current_s", "dec": 1, "unit": "A", "fallback": {"key": "ac_output_voltage_s", "unit": "V"}},
     {"el": "v-loadt-w", "key": "ac_output_power_t", "dec": 0, "unit": "W"},
-    {"el": "v-loadt-a", "key": "ac_output_current_t", "dec": 1, "unit": "A"},
+    {"el": "v-loadt-a", "key": "ac_output_current_t", "dec": 1, "unit": "A", "fallback": {"key": "ac_output_voltage_t", "unit": "V"}},
     {"el": "v-loadw", "key": "ac_output_power_total", "dec": 0, "unit": "W"},
     {"el": "v-loadpct", "key": "ac_output_percent", "dec": 0, "unit": "% load"},
 
-    {"el": "v-battw", "expr": "battery_voltage*battery_current", "dec": 0, "unit": "W"},
+    {"el": "v-battw", "key": "battery_power", "dec": 0, "unit": "W", "fallback": {"expr": "battery_voltage*battery_current", "unit": "W"}},
     {"el": "v-battv", "key": "battery_voltage", "dec": 1, "unit": "V"},
-    {"el": "v-batta", "key": "battery_current", "dec": 1, "unit": "A"},
+    {"el": "v-batta", "key": "battery_current", "dec": 1, "unit": "A", "fallback": {"expr": "battery_power/battery_voltage", "unit": "A"}},
     {"el": "v-battc", "key": "battery_capacity", "dec": 0, "unit": "%"}
   ],
   "flows": [
@@ -41,6 +41,6 @@
     {"el": "flow-pv2",  "key": "pv2_power", "min": 10},
     {"el": "flow-grid", "key": "grid_in_power_total", "min": 20},
     {"el": "flow-load", "key": "ac_output_power_total", "min": 15},
-    {"el": "flow-batt", "expr": "battery_voltage*battery_current", "min": 15}
+    {"el": "flow-batt", "key": "battery_power", "min": 15, "fallback": {"expr": "battery_voltage*battery_current"}}
   ]
 }
