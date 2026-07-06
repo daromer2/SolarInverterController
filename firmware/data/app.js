@@ -204,12 +204,27 @@ function renderLive() {
         el.classList.remove("rev");
         continue;
       }
-      const v = resolveBind(f).v;
+      let v = resolveBind(f).v;
+      if (f.invert && v !== undefined) v = -v;   // flip sign convention per device
       const min = f.min !== undefined ? f.min : 10;
       el.classList.toggle("active", v !== undefined && Math.abs(v) > min);
       el.classList.toggle("rev", v !== undefined && v < -min);
       if (v !== undefined && Math.abs(v) > min)
         el.style.animationDuration = Math.max(0.25, Math.min(2.5, 1200 / Math.abs(v))) + "s";
+    }
+
+    // sign-driven status labels (e.g. battery Charging/Discharging)
+    for (const s of manifest.states || []) {
+      const el = document.getElementById(s.el);
+      if (!el) continue;
+      const v = resolveBind(s).v;
+      const db = s.deadband || 0;
+      let st;
+      if (v === undefined) st = s.zero || { text: "—", color: "#8494a5" };
+      else if (v > db) st = s.pos;
+      else if (v < -db) st = s.neg;
+      else st = s.zero || { text: "Idle", color: "#8494a5" };
+      if (st) { el.textContent = st.text; el.style.fill = st.color; }
     }
   }
 

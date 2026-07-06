@@ -88,11 +88,12 @@
 
   <!-- battery -->
   <g>
-    <rect class="node" x="375" y="390" width="170" height="110" rx="10"/>
-    <text class="node-label" x="460" y="413" text-anchor="middle">🔋 BATTERY</text>
-    <text class="node-value" x="460" y="439" text-anchor="middle" id="v-battw">—</text>
-    <text class="node-sub"   x="452" y="461" text-anchor="end"    id="v-battv">—</text>
-    <text class="node-sub"   x="468" y="461" text-anchor="start"  id="v-batta">—</text>
-    <text class="node-sub"   x="460" y="481" text-anchor="middle" id="v-battc">—</text>
+    <rect class="node" x="375" y="388" width="170" height="124" rx="10"/>
+    <text class="node-label" x="460" y="410" text-anchor="middle">🔋 BATTERY</text>
+    <text class="node-value" x="460" y="435" text-anchor="middle" id="v-battw">—</text>
+    <text x="460" y="454" text-anchor="middle" id="v-battstate" font-size="12" font-weight="700" fill="#8494a5">—</text>
+    <text class="node-sub"   x="452" y="475" text-anchor="end"    id="v-battv">—</text>
+    <text class="node-sub"   x="468" y="475" text-anchor="start"  id="v-batta">—</text>
+    <text class="node-sub"   x="460" y="494" text-anchor="middle" id="v-battc">—</text>
   </g>
 </svg>

@@ -41,6 +41,17 @@
     {"el": "flow-pv2",  "key": "pv2_power", "min": 10},
     {"el": "flow-grid", "key": "grid_in_power_total", "min": 20},
     {"el": "flow-load", "key": "ac_output_power_total", "min": 15},
-    {"el": "flow-batt", "key": "battery_power", "min": 15, "fallback": {"expr": "battery_voltage*battery_current"}}
+    {"el": "flow-batt", "key": "battery_power", "min": 15, "invert": true, "fallback": {"expr": "battery_voltage*battery_current"}}
+  ],
+  "states": [
+    {
+      "el": "v-battstate",
+      "key": "battery_power",
+      "fallback": {"expr": "battery_voltage*battery_current"},
+      "deadband": 15,
+      "pos": {"text": "▲ Charging", "color": "#3ddc84"},
+      "neg": {"text": "▼ Discharging", "color": "#ff5c5c"},
+      "zero": {"text": "Idle", "color": "#8494a5"}
+    }
   ]
 }
