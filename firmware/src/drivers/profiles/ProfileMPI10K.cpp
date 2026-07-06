@@ -183,11 +183,14 @@ const SetCommandDef MPI_SETS[] = {
      0, 0, 0, nullptr, nullptr, 0, "HECS"},
     {"batt_to_grid_solar_loss", "Battery feeds grid (solar loss)", "Grid feed-in", "", "EDG1|EDG0", ArgKind::Bool,
      0, 0, 0, nullptr, nullptr, 0, "HECS"},
-    // Sends ^S..FPADJ<args>. Args mirror the FPADJ query layout:
-    // dir,watt,dirR,calibR,dirS,calibS,dirT,calibT  (e.g. 1,0000,1,0099,1,0109,1,0112)
-    {"feed_power_adjust", "Feed calibration — raw args (dir,watt,dirR,calibR,dirS,calibS,dirT,calibT)",
-     "Grid feed-in", "", "FPADJ%s", ArgKind::String,
-     0, 0, 0, nullptr, nullptr, 0, "FPADJ"},
+    // Per-phase feed calibration. Wire form ^S013FP<phase>ADJ1<power> with a
+    // 5-digit zero-padded power (0-999 W), e.g. ^S013FPRADJ100099 for R=99W.
+    {"feed_calib_r", "Feed calibration phase R", "Grid feed-in", "W", "FPRADJ1%05d",
+     ArgKind::Int, 0, 999, 1, nullptr, nullptr, 0, "FPADJ"},
+    {"feed_calib_s", "Feed calibration phase S", "Grid feed-in", "W", "FPSADJ1%05d",
+     ArgKind::Int, 0, 999, 1, nullptr, nullptr, 0, "FPADJ"},
+    {"feed_calib_t", "Feed calibration phase T", "Grid feed-in", "W", "FPTADJ1%05d",
+     ArgKind::Int, 0, 999, 1, nullptr, nullptr, 0, "FPADJ"},
 
     // Mode / energy distribution
     {"load_output", "Supply power to loads", "Mode", "", "LON1|LON0", ArgKind::Bool,
