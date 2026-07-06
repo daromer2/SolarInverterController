@@ -281,6 +281,12 @@ void WebApp::setupStatic()
         });
     }
 
+    // Browsers auto-request /favicon.ico; redirect to the SVG we ship so it
+    // doesn't fall through to a filesystem probe + 404.
+    _server.on("/favicon.ico", HTTP_GET, [](AsyncWebServerRequest* req) {
+        req->redirect("/favicon.svg");
+    });
+
     _server.serveStatic("/", LittleFS, "/")
         .setDefaultFile("index.html")
         .setCacheControl("max-age=600");
