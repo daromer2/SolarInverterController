@@ -289,6 +289,7 @@ function renderControls() {
     g.className = "ctlgroup";
     g.innerHTML = `<h3>${group}</h3>`;
     for (const s of sets) {
+      if (s.key === "feed_power_adjust") continue;  // replaced by per-phase panel
       const row = document.createElement("div");
       row.className = "ctlrow";
       let input;
@@ -321,6 +322,75 @@ function renderControls() {
   root.querySelectorAll("input[type=checkbox][data-key]").forEach((c) =>
     c.addEventListener("change", () => sendCmd(c.dataset.key, c.checked ? "1" : "0", c))
   );
+
+  renderFeedCalib(root);
+}
+
+/* Per-phase feed calibration (FPADJ). The inverter takes the whole frame, so
+ * each "Set" rebuilds it from the live values and changes only that phase —
+ * letting you tune R/S/T one at a time from their current values. */
+const FPADJ_PHASES = [["R", "r"], ["S", "s"], ["T", "t"]];
+
+function renderFeedCalib(root) {
+  if (FIELDS["feed_calibration_r"] === undefined) return;  // MPI only
+  const g = document.createElement("div");
+  g.className = "ctlgroup";
+  g.innerHTML = `<h3>Feed calibration (per phase)</h3>`;
+  for (const [P, p] of FPADJ_PHASES) {
+    const row = document.createElement("div");
+    row.className = "ctlrow";
+    row.innerHTML =
+      `<label>Phase ${P} calibration <span style="color:var(--muted)">(W)</span></label>
+       <span class="cur" id="cur-fpadj-${p}">—</span>
+       <input type="number" step="1" id="in-fpadj-${p}">
+       <button class="act" data-fpadj="${p}">Set</button>
+       <span class="state" id="st-fpadj-${p}"></span>`;
+    g.appendChild(row);
+  }
+  root.appendChild(g);
+  g.querySelectorAll("button[data-fpadj]").forEach((b) =>
+    b.addEventListener("click", () => setFpadjPhase(b.dataset.fpadj))
+  );
+}
+
+function pad4(n) { return String(Math.max(0, Math.round(n))).padStart(4, "0"); }
+
+/* Build the FPADJ frame from current live values, overriding one phase.
+ * Layout mirrors the FPADJ query: dir,watt,dirR,calibR,dirS,calibS,dirT,calibT */
+function fpadjFrame(overridePhase, overrideVal) {
+  const g = (k, d) => { const v = state[k]; return v === undefined ? d : Math.round(v); };
+  const calib = {
+    r: overridePhase === "r" ? Math.round(overrideVal) : g("feed_calibration_r", 0),
+    s: overridePhase === "s" ? Math.round(overrideVal) : g("feed_calibration_s", 0),
+    t: overridePhase === "t" ? Math.round(overrideVal) : g("feed_calibration_t", 0),
+  };
+  return `FPADJ${g("feed_direction", 1)},${pad4(g("feed_power_watt", 0))},` +
+    `${g("feed_dir_r", 1)},${pad4(calib.r)},` +
+    `${g("feed_dir_s", 1)},${pad4(calib.s)},` +
+    `${g("feed_dir_t", 1)},${pad4(calib.t)}`;
+}
+
+const rawPending = {};  // raw-command id -> status element (for ACK feedback)
+
+async function setFpadjPhase(p) {
+  const inp = document.getElementById("in-fpadj-" + p);
+  const v = Number(inp.value);
+  if (!isFinite(v) || inp.value === "") return toast("Enter a value first", "bad");
+  const cmd = fpadjFrame(p, v);
+  if (!confirm(`Send raw command to the inverter:\n\n${cmd}\n\n` +
+    `Sets phase ${p.toUpperCase()} feed calibration to ${Math.round(v)} W ` +
+    `(other phases keep their current values).`)) return;
+  inp._touched = true;
+  const st = document.getElementById("st-fpadj-" + p);
+  if (st) { st.textContent = "sending…"; st.className = "state pend"; }
+  try {
+    const r = await post("/api/raw", { cmd });
+    const j = await r.json();
+    if (j.accepted && j.id) rawPending[j.id] = { st, inp };
+    else if (st) { st.textContent = "rejected"; st.className = "state bad"; }
+  } catch (e) {
+    if (st) { st.textContent = "error"; st.className = "state bad"; }
+  }
 }
 
 function updateControlCurrents() {
@@ -338,6 +408,16 @@ function updateControlCurrents() {
       v = v >= 1 ? "on" : "off";
     }
     el.textContent = typeof v === "number" ? fmtVal(v) : v;
+  }
+
+  // per-phase feed calibration: show live value + prefill input from current
+  for (const [, p] of FPADJ_PHASES) {
+    const key = "feed_calibration_" + p;
+    if (state[key] === undefined) continue;
+    const cur = document.getElementById("cur-fpadj-" + p);
+    if (cur) cur.textContent = fmtVal(state[key]) + " W";
+    const inp = document.getElementById("in-fpadj-" + p);
+    if (inp && !inp._touched) inp.value = Math.round(state[key]);
   }
 }
 
@@ -371,6 +451,18 @@ function onCmdResult(m) {
     }
     toast(`${m.key} = ${m.value}: ${m.status.toUpperCase()}`, m.status === "ok" ? "ok" : "bad");
   } else {
+    // raw command result — route to a per-phase feed-calibration row if pending
+    if (rawPending[m.id]) {
+      const { st, inp } = rawPending[m.id];
+      delete rawPending[m.id];
+      if (st) {
+        st.textContent = m.status === "ok" ? "✓ accepted" : m.status;
+        st.className = "state " + (m.status === "ok" ? "ok" : "bad");
+      }
+      // on success let the input re-sync to the readback value
+      if (m.status === "ok" && inp) inp._touched = false;
+      toast(`Feed calibration: ${m.status.toUpperCase()}`, m.status === "ok" ? "ok" : "bad");
+    }
     conLog(`< ${m.status}${m.response ? " " + m.response : ""}`, m.status === "ok" ? "rx" : "err");
   }
 }
