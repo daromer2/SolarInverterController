@@ -6,6 +6,7 @@
 #   ./flash.sh all                 build + flash firmware AND web UI (USB)
 #   ./flash.sh fs                  build + flash only the web UI (LittleFS)
 #   ./flash.sh monitor             open the serial monitor (115200)
+#   ./flash.sh erase               wipe ALL flash (config + fs), then reflash all
 #   ./flash.sh test                run the host-side protocol tests
 #
 #   ./flash.sh ota <host> [fw|fs|all]   flash over the network, e.g.:
@@ -60,6 +61,14 @@ case "${1:-fw}" in
                  "$PIO" run -e esp32 -t uploadfs --upload-port "$HOST" ;;
             *)   echo "unknown target '$WHAT' (fw|fs|all)"; exit 1 ;;
         esac
+        ;;
+    erase)
+        usb_hint
+        echo ">> erasing entire flash (config + filesystem)…"
+        "$PIO" run -e esp32 -t erase "${PORT_ARG[@]}"
+        echo ">> reflashing firmware + web UI…"
+        "$PIO" run -e esp32 -t upload "${PORT_ARG[@]}"
+        "$PIO" run -e esp32 -t uploadfs "${PORT_ARG[@]}"
         ;;
     monitor)
         "$PIO" device monitor -b 115200
