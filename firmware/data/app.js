@@ -204,7 +204,9 @@ function renderLive() {
       const el = document.getElementById(b.el);
       if (!el) continue;
       const r = resolveBind(b);
-      el.textContent = (r.v === undefined ? "—" : fmtVal(r.v, b.dec)) + (r.unit ? " " + r.unit : "");
+      let txt = (r.v === undefined ? "—" : fmtVal(r.v, b.dec)) + (r.unit ? " " + r.unit : "");
+      if (b.paren) txt = "(" + txt + ")";   // e.g. current shown as "(2.1 A)"
+      el.textContent = txt;
       // hover tooltip: explicit bind title, else the field's label
       const tip = b.title || (b.key && FIELDS[b.key] ? FIELDS[b.key].label : null);
       if (tip) setTip(el, tip);
