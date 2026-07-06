@@ -20,8 +20,9 @@
     {"el": "v-gridt-v", "key": "grid_voltage_t", "dec": 0, "unit": "V"},
     {"el": "v-gridt-a", "key": "grid_current_t", "dec": 1, "unit": "A"},
     {"el": "v-gridw", "key": "grid_in_power_total", "dec": 0, "unit": "W",
-     "title": "Grid power — AC-input power if reported, else computed from grid V×I",
-     "fallback": {"expr": "grid_voltage_r*grid_current_r+grid_voltage_s*grid_current_s+grid_voltage_t*grid_current_t", "unit": "W"}},
+     "title": "Grid power — AC-input power, else grid V×I, else AC-output power",
+     "fallback": {"expr": "grid_voltage_r*grid_current_r+grid_voltage_s*grid_current_s+grid_voltage_t*grid_current_t",
+                  "fallback": {"key": "ac_output_power_total"}}},
     {"el": "v-gridf", "key": "grid_frequency", "dec": 2, "unit": "Hz"},
 
     {"el": "v-loadr-w", "key": "ac_output_power_r", "dec": 0, "unit": "W", "title": "AC output power R"},
@@ -41,7 +42,7 @@
   "flows": [
     {"el": "flow-pv1",  "key": "pv1_power", "min": 10},
     {"el": "flow-pv2",  "key": "pv2_power", "min": 10},
-    {"el": "flow-grid", "key": "grid_in_power_total", "min": 20},
+    {"el": "flow-grid", "key": "grid_in_power_total", "min": 20, "fallback": {"key": "ac_output_power_total"}},
     {"el": "flow-load", "key": "ac_output_power_total", "min": 15},
     {"el": "flow-batt", "key": "battery_power", "min": 15, "invert": true, "fallback": {"expr": "battery_voltage*battery_current"}}
   ],

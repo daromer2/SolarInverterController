@@ -73,21 +73,17 @@ function evalExpr(expr) {
   return ok && isFinite(total) ? total : undefined;
 }
 
-/* Resolve a bind value with an optional fallback source. Each source may be a
- * key or an expr and carry its own unit (so a current field can fall back to a
- * voltage field, switching "A" -> "V"). */
+/* Resolve a bind value, trying its source then a chain of fallbacks. Each
+ * source may be a key or an expr and carry its own unit (so a current field
+ * can fall back to a voltage field, switching "A" -> "V"). Fallbacks nest via
+ * b.fallback.fallback... so a value can chain through several sources. */
 function resolveBind(b) {
-  const trySrc = (key, expr, unit) => {
-    if (key !== undefined && state[key] !== undefined) return { v: state[key], unit };
-    if (expr) { const v = evalExpr(expr); if (v !== undefined) return { v, unit }; }
-    return null;
-  };
-  const primary = trySrc(b.key, b.expr, b.unit);
-  if (primary) return primary;
+  if (b.key !== undefined && state[b.key] !== undefined) return { v: state[b.key], unit: b.unit };
+  if (b.expr) { const v = evalExpr(b.expr); if (v !== undefined) return { v, unit: b.unit }; }
   if (b.fallback) {
-    const f = b.fallback;
-    const fb = trySrc(f.key, f.expr, f.unit !== undefined ? f.unit : b.unit);
-    if (fb) return fb;
+    const f = Object.assign({}, b.fallback);
+    if (f.unit === undefined) f.unit = b.unit;   // inherit unit unless overridden
+    return resolveBind(f);
   }
   return { v: undefined, unit: b.unit };
 }
