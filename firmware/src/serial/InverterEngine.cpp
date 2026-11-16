@@ -61,6 +61,14 @@ bool InverterEngine::submitRaw(const char* cmd, CmdOrigin origin, uint32_t id)
     return xQueueSend(_userQueue, &req, 0) == pdTRUE;
 }
 
+void InverterEngine::setPvPowerFloor(float watts)
+{
+    if (!_stateMux) return;
+    xSemaphoreTake(_stateMux, portMAX_DELAY);
+    _state.setPvPowerFloor(watts);
+    xSemaphoreGive(_stateMux);
+}
+
 bool InverterEngine::popResult(CmdResult& out)
 {
     return _resultQueue && xQueueReceive(_resultQueue, &out, 0) == pdTRUE;

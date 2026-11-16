@@ -503,7 +503,7 @@ $("#logrefresh").addEventListener("click", async () => {
 /* ---------------- settings ---------------- */
 
 const SETTING_KEYS = [
-  "deviceName", "profileId", "uartRx", "uartTx", "baudOverride",
+  "deviceName", "profileId", "uartRx", "uartTx", "baudOverride", "pvMinPowerW",
   "wifiSsid", "mqttEnabled", "mqttServer", "mqttPort", "mqttUser",
   "baseTopic", "publishIntervalS", "perFieldTopics", "legacyCompat",
   "haDiscovery", "haPrefix", "feedGuardEnabled", "feedGuardTimeoutS",

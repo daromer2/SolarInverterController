@@ -36,6 +36,7 @@ public:
                             iot::CmdOrigin origin, uint32_t id);
     bool submitRaw(const char* cmd, iot::CmdOrigin origin, uint32_t id);
     bool popResult(CmdResult& out);          // non-blocking
+    void setPvPowerFloor(float watts);       // see DeviceState::setPvPowerFloor
 
     bool linkUp() const { return _linkUp; }
     uint32_t lastGoodRxMs() const { return _lastGoodRx; }

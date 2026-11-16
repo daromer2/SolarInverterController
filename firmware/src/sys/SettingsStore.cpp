@@ -28,6 +28,7 @@ void SettingsStore::load()
     s.baudOverride = p.getULong("baud", s.baudOverride);
     s.uartRx       = p.getUChar("urx", s.uartRx);
     s.uartTx       = p.getUChar("utx", s.uartTx);
+    s.pvMinPowerW  = p.getUShort("pvmin", s.pvMinPowerW);
 
     s.authEnabled = p.getBool("wen", s.authEnabled);
     s.webUser     = p.getString("wusr", s.webUser);
@@ -71,6 +72,7 @@ void SettingsStore::save() const
     p.putULong("baud", s.baudOverride);
     p.putUChar("urx", s.uartRx);
     p.putUChar("utx", s.uartTx);
+    p.putUShort("pvmin", s.pvMinPowerW);
 
     p.putBool("wen", s.authEnabled);
     p.putString("wusr", s.webUser);
@@ -121,6 +123,7 @@ void SettingsStore::toJson(JsonDocument& doc, bool includeSecrets) const
     doc["baudOverride"] = s.baudOverride;
     doc["uartRx"] = s.uartRx;
     doc["uartTx"] = s.uartTx;
+    doc["pvMinPowerW"] = s.pvMinPowerW;
 
     doc["authEnabled"] = s.authEnabled;
     doc["webUser"] = s.webUser;
@@ -166,6 +169,7 @@ bool SettingsStore::fromJson(JsonDocument& doc)
 
     applyIf(doc, "profileId", s.profileId);
     applyIf(doc, "baudOverride", s.baudOverride);
+    applyIf(doc, "pvMinPowerW", s.pvMinPowerW);
     applyIf(doc, "uartRx", s.uartRx);
     applyIf(doc, "uartTx", s.uartTx);
 

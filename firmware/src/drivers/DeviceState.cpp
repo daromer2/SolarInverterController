@@ -36,10 +36,17 @@ const Datapoint* DeviceState::find(const char* key) const
     return const_cast<DeviceState*>(this)->find(key);
 }
 
+bool DeviceState::isPvPowerField(const FieldDef* def)
+{
+    if (!def || !def->unit || strcmp(def->unit, "W") != 0) return false;
+    return strstr(def->key, "pv") != nullptr || strcmp(def->key, "charging_power") == 0;
+}
+
 void DeviceState::setNum(const char* key, float value, uint32_t nowMs)
 {
     Datapoint* p = find(key);
     if (!p) return;
+    if (_pvFloor > 0 && value < _pvFloor && isPvPowerField(p->def)) value = 0;
     p->updatedMs = nowMs;
     if (!p->valid || p->num != value) {
         p->num = value;

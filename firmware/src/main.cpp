@@ -67,6 +67,7 @@ void setup()
         profile = &iot::PROFILE_PIP;
     }
     engine.begin(profile, s.baudOverride, s.uartRx, s.uartTx);
+    engine.setPvPowerFloor(s.pvMinPowerW);
 
     wifi.begin(s.wifiSsid, s.wifiPass, "ESP-" + s.deviceName);
 
@@ -97,6 +98,14 @@ void loop()
              (unsigned long)r.id, r.key, r.wire, r.status);
         mqtt.publishResult(r);
         wsHub.broadcastResult(r);
+    }
+
+    // PV power floor applies live (no reboot) when changed in settings
+    static uint16_t pvFloor = settings.s.pvMinPowerW;
+    if (settings.s.pvMinPowerW != pvFloor) {
+        pvFloor = settings.s.pvMinPowerW;
+        engine.setPvPowerFloor(pvFloor);
+        LOGI("main", "PV power floor = %u W", pvFloor);
     }
 
     leds.setInverterFault(!engine.linkUp());

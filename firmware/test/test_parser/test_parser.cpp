@@ -113,6 +113,27 @@ void test_pcm_qpigs_parse()
     TEST_ASSERT_FLOAT_WITHIN(0.01, 450,   state.find("charging_power")->num);
 }
 
+// ---- PV power floor: phantom watts below the floor read as 0 ----------------------
+void test_pv_power_floor()
+{
+    state.bindProfile(&PROFILE_PCM60X);
+    state.setPvPowerFloor(18);
+    const QueryCommandDef* q = query(PROFILE_PCM60X, "QPIGS");
+    const char* off = "000.0 51.18 00.00 00.00 00.00 0017";
+    parseFields(*q, off, strlen(off), state, 1000);
+    TEST_ASSERT_FLOAT_WITHIN(0.01, 0, state.find("charging_power")->num);
+    TEST_ASSERT_FLOAT_WITHIN(0.01, 51.18, state.find("battery_voltage")->num);  // non-PV untouched
+    const char* on = "087.6 51.18 08.81 04.71 04.10 0018";
+    parseFields(*q, on, strlen(on), state, 2000);
+    TEST_ASSERT_FLOAT_WITHIN(0.01, 18, state.find("charging_power")->num);
+
+    state.bindProfile(&PROFILE_MPI10K);
+    const FieldDef* pv1 = state.find("pv1_power")->def;
+    TEST_ASSERT_TRUE(DeviceState::isPvPowerField(pv1));
+    TEST_ASSERT_FALSE(DeviceState::isPvPowerField(state.find("pv1_voltage")->def));
+    state.setPvPowerFloor(0);
+}
+
 // ---- Set command formatting -------------------------------------------------------
 void test_set_formatting()
 {
@@ -208,6 +229,7 @@ int main(int, char**)
     RUN_TEST(test_pip_qpigs_parse);
     RUN_TEST(test_pip_qmod_and_qflag);
     RUN_TEST(test_pcm_qpigs_parse);
+    RUN_TEST(test_pv_power_floor);
     RUN_TEST(test_set_formatting);
     RUN_TEST(test_scheduler_priorities);
     return UNITY_END();

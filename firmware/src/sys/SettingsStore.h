@@ -28,6 +28,7 @@ struct Settings {
     String profileId = "PIP";        // "MPI" / "PIP" / "PCM"
     uint32_t baudOverride = 0;       // 0 = profile default
     uint8_t uartRx = 16, uartTx = 17;
+    uint16_t pvMinPowerW = 0;        // PV power below this reads as 0 (0 = off)
 
     // web
     bool   authEnabled = true;

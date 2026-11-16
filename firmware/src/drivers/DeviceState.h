@@ -35,6 +35,13 @@ public:
     void setNum(const char* key, float value, uint32_t nowMs);
     void setStr(const char* key, const char* value, uint16_t len, uint32_t nowMs);
 
+    // PV power readings below this (W) are stored as 0. Works around devices
+    // that keep reporting a small phantom wattage when the PV side is off.
+    // Applies to "W" fields whose key contains "pv", plus "charging_power"
+    // (the PCM60X's PV power). 0 = disabled.
+    void setPvPowerFloor(float watts) { _pvFloor = watts; }
+    static bool isPvPowerField(const FieldDef* def);
+
     uint8_t count() const { return _n; }
     const Datapoint& at(uint8_t i) const { return _pts[i]; }
     uint32_t seq() const { return _seq; }
@@ -43,6 +50,7 @@ private:
     Datapoint _pts[MAX_DATAPOINTS];
     uint8_t _n = 0;
     uint32_t _seq = 0;
+    float _pvFloor = 0;
 };
 
 } // namespace iot

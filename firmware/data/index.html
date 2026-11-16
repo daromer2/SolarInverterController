@@ -86,6 +86,8 @@
         <label>UART RX pin</label><input id="s-uartRx" type="number" min="0" max="39">
         <label>UART TX pin</label><input id="s-uartTx" type="number" min="0" max="33">
         <label>Baud override (0 = default)</label><input id="s-baudOverride" type="number" min="0">
+        <label>Min PV power (W)</label><input id="s-pvMinPowerW" type="number" min="0" max="1000">
+        <span class="formrow-note">Solar power readings below this are reported as 0 (for devices that show phantom watts when off). 0 = disabled. Applies without reboot.</span>
       </div>
     </div>
 
