@@ -51,6 +51,9 @@
         Commands are validated, sent to the inverter, and confirmed (ACK/NAK).
         Current values come from the device itself.
       </p>
+      <button class="act" id="btn-ctlget">Get from device</button>
+      <span class="formrow-note">Re-reads the settings from the inverter now and shows the raw reply</span>
+      <pre id="ctlraw" class="ctlraw" hidden></pre>
       <div id="controls"></div>
     </div>
   </section>
@@ -135,6 +138,8 @@
         <label>Green pin (MQTT)</label><input id="s-ledGreenPin" type="number" min="0" max="33">
         <label>Active low</label><label class="switch"><input type="checkbox" id="s-ledActiveLow"><span class="slider"></span></label>
       </div>
+      <button class="act" id="btn-ledtest" style="margin-top:10px">Test LEDs</button>
+      <span class="formrow-note">Blinks both LEDs 5 times using the pins above (no need to save first)</span>
     </div>
 
     <div class="card">

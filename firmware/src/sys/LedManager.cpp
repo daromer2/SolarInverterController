@@ -18,8 +18,39 @@ void LedManager::write(uint8_t pin, bool on)
     digitalWrite(pin, (on ^ _activeLow) ? HIGH : LOW);
 }
 
+void LedManager::requestTest(uint8_t redPin, uint8_t greenPin, bool activeLow)
+{
+    _reqRed = redPin;
+    _reqGreen = greenPin;
+    _reqActiveLow = activeLow;
+    _testPending = true;
+}
+
+static constexpr uint32_t TEST_HALF_MS = 300;   // on 300 ms, off 300 ms
+static constexpr uint32_t TEST_BLINKS = 5;
+
 void LedManager::tick(uint32_t nowMs)
 {
+    if (_testPending) {
+        _testPending = false;
+        _tRed = _reqRed;
+        _tGreen = _reqGreen;
+        _tActiveLow = _reqActiveLow;
+        pinMode(_tRed, OUTPUT);
+        pinMode(_tGreen, OUTPUT);
+        _testStart = nowMs;
+        _testing = true;
+    }
+    if (_testing) {
+        uint32_t el = nowMs - _testStart;
+        bool done = el >= TEST_BLINKS * 2 * TEST_HALF_MS;
+        bool on = !done && ((el / TEST_HALF_MS) & 1) == 0;
+        digitalWrite(_tRed,   (on ^ _tActiveLow) ? HIGH : LOW);
+        digitalWrite(_tGreen, (on ^ _tActiveLow) ? HIGH : LOW);
+        if (!done) return;
+        _testing = false;   // test pins left off; normal status resumes below
+    }
+
     if (!_enabled) return;
     bool blink = (nowMs / 500) & 1;
 

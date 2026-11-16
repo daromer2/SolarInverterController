@@ -2,6 +2,7 @@
 #include <Arduino.h>
 #include <ESPAsyncWebServer.h>
 #include "../serial/InverterEngine.h"
+#include "../sys/LedManager.h"
 #include "../sys/SettingsStore.h"
 #include "WsHub.h"
 
@@ -11,7 +12,7 @@
 class WebApp {
 public:
     void begin(SettingsStore* settings, InverterEngine* engine, WsHub* ws,
-               bool apMode);
+               LedManager* leds, bool apMode);
     bool rebootRequested() const { return _rebootAt && (int32_t)(millis() - _rebootAt) > 0; }
 
 private:
@@ -24,6 +25,7 @@ private:
     SettingsStore* _settings = nullptr;
     InverterEngine* _engine = nullptr;
     WsHub* _ws = nullptr;
+    LedManager* _leds = nullptr;
     bool _apMode = false;
     volatile uint32_t _rebootAt = 0;
     uint32_t _cmdCounter = 1;

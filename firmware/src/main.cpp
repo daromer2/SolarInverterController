@@ -74,7 +74,7 @@ void setup()
                 s.feedGuardFailsafeW, onGuardEvent);
 
     mqtt.begin(&settings, &engine, &guard);
-    web.begin(&settings, &engine, &wsHub, wifi.isApMode());
+    web.begin(&settings, &engine, &wsHub, &leds, wifi.isApMode());
     ota.begin("ESP-" + s.deviceName, s.otaPassword);
 }
 

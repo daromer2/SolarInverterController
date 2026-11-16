@@ -414,7 +414,49 @@ async function sendCmd(key, value, checkbox) {
   }
 }
 
+/* "Get from device": send every query the setters read back from (QPIRI,
+ * QFLAG, ...) as raw commands. Known queries are parsed into state by the
+ * engine, so the "current" column refreshes; the raw replies are shown so
+ * they can be checked against what the UI displays. */
+const ctlGetPending = new Map();  // cmd id -> query name
+
+$("#btn-ctlget").addEventListener("click", async () => {
+  if (!device) return;
+  const queries = [...new Set(device.sets.map((s) => s.readback).filter(Boolean))];
+  if (!queries.length) { toast("No readable settings for this device", "bad"); return; }
+  const raw = $("#ctlraw");
+  raw.hidden = false;
+  raw.textContent = "";
+  for (const q of queries) {
+    try {
+      const j = await (await post("/api/raw", { cmd: q })).json();
+      if (j.accepted) {
+        ctlGetPending.set(j.id, q);
+        raw.textContent += `${q}: waiting…\n`;
+      } else raw.textContent += `${q}: rejected (queue full?)\n`;
+    } catch (e) {
+      raw.textContent += `${q}: error\n`;
+    }
+  }
+});
+
+function onCtlGetResult(m) {
+  const q = ctlGetPending.get(m.id);
+  if (!q) return false;
+  ctlGetPending.delete(m.id);
+  const raw = $("#ctlraw");
+  const line = `${q}: ${m.status === "ok" ? m.response || "(empty)" : m.status.toUpperCase()}`;
+  raw.textContent = raw.textContent.replace(`${q}: waiting…`, line);
+  if (m.status === "ok") {
+    // let inputs re-sync to the freshly read values
+    document.querySelectorAll("#controls input, #controls select").forEach((i) => { i._touched = false; });
+  }
+  if (!ctlGetPending.size) toast("Settings read from device", "ok");
+  return true;
+}
+
 function onCmdResult(m) {
+  if (onCtlGetResult(m)) return;
   if (m.key) {
     const st = document.getElementById("st-" + m.key);
     if (st) {
@@ -500,6 +542,15 @@ $("#btn-save").addEventListener("click", async () => {
     body: JSON.stringify(out),
   });
   toast(r.ok ? "Saved — reboot to apply" : "Save failed", r.ok ? "ok" : "bad");
+});
+
+$("#btn-ledtest").addEventListener("click", async () => {
+  const r = await post("/api/ledtest", {
+    red: $("#s-ledRedPin").value,
+    green: $("#s-ledGreenPin").value,
+    activeLow: $("#s-ledActiveLow").checked ? 1 : 0,
+  });
+  toast(r.ok ? "Blinking LEDs 5×" : "LED test failed — invalid pin?", r.ok ? "ok" : "bad");
 });
 
 $("#btn-reboot").addEventListener("click", async () => {

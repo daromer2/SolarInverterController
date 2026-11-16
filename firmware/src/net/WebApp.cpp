@@ -8,8 +8,23 @@
 
 using namespace iot;
 
-void WebApp::begin(SettingsStore* settings, InverterEngine* engine, WsHub* ws, bool apMode)
+// data/setup.html embedded via board_build.embed_txtfiles (NUL-terminated).
+extern const char setup_html_start[] asm("_binary_data_setup_html_start");
+
+// Serve setup.html from LittleFS if present (picks up uploadfs changes),
+// otherwise the copy baked into the firmware.
+static void sendSetupPage(AsyncWebServerRequest* req)
 {
+    if (LittleFS.exists("/setup.html.gz") || LittleFS.exists("/setup.html"))
+        req->send(LittleFS, "/setup.html", "text/html");
+    else
+        req->send(200, "text/html", setup_html_start);
+}
+
+void WebApp::begin(SettingsStore* settings, InverterEngine* engine, WsHub* ws,
+                   LedManager* leds, bool apMode)
+{
+    _leds = leds;
     _settings = settings;
     _engine = engine;
     _ws = ws;
@@ -72,6 +87,7 @@ void WebApp::setupApi()
             o["label"] = sd.label;
             o["group"] = sd.group;
             if (sd.unit[0]) o["unit"] = sd.unit;
+            if (sd.readback) o["readback"] = sd.readback;
             switch (sd.arg) {
             case ArgKind::Enum: {
                 o["type"] = "enum";
@@ -227,6 +243,29 @@ void WebApp::setupApi()
         req->send(200, "text/plain", buf);
     });
 
+    // Blink both LEDs 5x using the pins in the request (unsaved form values)
+    // or, if absent, the saved settings.
+    _server.on("/api/ledtest", HTTP_POST, [this](AsyncWebServerRequest* req) {
+        if (!auth(req)) return;
+        const Settings& s = _settings->s;
+        auto num = [req](const char* k, int def) {
+            return req->hasParam(k, true) ? req->getParam(k, true)->value().toInt() : def;
+        };
+        int red = num("red", s.ledRedPin);
+        int green = num("green", s.ledGreenPin);
+        bool activeLow = num("activeLow", s.ledActiveLow) != 0;
+        // GPIO 6-11 = SPI flash, 34+ = input-only, UART pins = inverter link.
+        auto bad = [&](int p) {
+            return p < 0 || p > 33 || (p >= 6 && p <= 11) || p == s.uartRx || p == s.uartTx;
+        };
+        if (bad(red) || bad(green)) {
+            req->send(400, "application/json", "{\"ok\":false,\"error\":\"invalid pin\"}");
+            return;
+        }
+        _leds->requestTest(red, green, activeLow);
+        req->send(200, "application/json", "{\"ok\":true}");
+    });
+
     _server.on("/api/reboot", HTTP_POST, [this](AsyncWebServerRequest* req) {
         if (!auth(req)) return;
         req->send(200, "application/json", "{\"ok\":true}");
@@ -272,12 +311,16 @@ void WebApp::setupOta()
 void WebApp::setupStatic()
 {
     // Captive portal: unknown hosts get redirected to the device in AP mode.
+    // Explicit handler so /setup.html never falls through to onNotFound —
+    // with an empty filesystem that used to redirect to itself forever.
+    _server.on("/setup.html", HTTP_GET, sendSetupPage);
+
     if (_apMode) {
         _server.on("/generate_204", [](AsyncWebServerRequest* req) {  // Android
-            req->redirect("/setup.html");
+            req->redirect("http://" + WiFi.softAPIP().toString() + "/setup.html");
         });
         _server.on("/hotspot-detect.html", [](AsyncWebServerRequest* req) {  // Apple
-            req->redirect("/setup.html");
+            req->redirect("http://" + WiFi.softAPIP().toString() + "/setup.html");
         });
     }
 
@@ -296,7 +339,7 @@ void WebApp::setupStatic()
 
     _server.onNotFound([this](AsyncWebServerRequest* req) {
         if (_apMode) {
-            req->redirect("/setup.html");
+            req->redirect("http://" + WiFi.softAPIP().toString() + "/setup.html");
             return;
         }
         // Recovery path: OTA + setup remain reachable even with an empty FS
